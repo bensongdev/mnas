@@ -17,8 +17,16 @@ jobs:
         run: brew install xcodegen swiftlint
       - name: 프로젝트 생성
         run: ./scripts/bootstrap.sh
-      - name: 빌드 및 단위 테스트
-        run: ./scripts/verify.sh unit
+      # GitHub의 macOS 러너에는 화면 세션이 있어 실제 클릭 UI 테스트를 돌릴 수 있다(CI=true라 허용됨).
+      # 로컬에서는 사용자의 마우스·키보드를 빼앗지 않도록 verify.sh all(화면 밖 스냅샷)만 기본으로 돌린다.
+      - name: 전체 검증 (단위 테스트, 스냅샷, UI 테스트)
+        run: ./scripts/verify.sh full
+      - name: 검증 보고서를 실행 요약에 표시
+        if: always()
+        run: |
+          if [ -f .artifacts/latest-run ] && [ -f "$(cat .artifacts/latest-run)/verification.md" ]; then
+            cat "$(cat .artifacts/latest-run)/verification.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: 실패해도 증거 업로드
         if: always()
         uses: actions/upload-artifact@v4

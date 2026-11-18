@@ -4,7 +4,7 @@
 
 > **개발이 처음이라면 [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)부터 읽으세요.** 설치부터 첫 실행, 결과 확인, AI에게 첫 기능을 시키는 방법까지 차례대로 설명합니다. 이 README는 이미 익숙한 사람을 위한 참조 문서입니다.
 
-> 상태: 2026-11-18 macOS 26.6.2 / Xcode 27.0 / Apple Silicon(M1, 8GB)에서 `scripts/verify.sh all` 실행 검증(빌드·린트·단위·UI 테스트·스크린샷). 다른 Xcode 버전에서는 첫 실행 시 다시 검증하세요.
+> 상태: 2026-11-18 macOS 26.6.2 / Xcode 27.0 / Apple Silicon(M1, 8GB)에서 `scripts/verify.sh all`(빌드·린트·단위 테스트·화면 밖 스냅샷)과 `full`(+ 실제 클릭 UI 테스트) 실행 검증. 다른 Xcode 버전에서는 첫 실행 시 다시 검증하세요.
 
 ## 0. 준비
 - 호환되는 **전체 Xcode**가 설치된 macOS (Command Line Tools만으로는 부족). 앱은 macOS 13+를 지원하지만 테스트 실행에는 macOS 14+가 필요합니다.
@@ -22,7 +22,9 @@ open NativeStarter.xcodeproj   # 이름을 바꿨다면 <Name>.xcodeproj
 
 `*.xcodeproj`는 `project.yml`에서 생성되는 파일이라 Git에 올리지 않습니다(`.gitignore`). 빌드 설정과 타깃은 Xcode가 아니라 `project.yml`에서 수정하세요. Xcode에서 바꾼 설정은 다음 `bootstrap.sh`/`verify.sh` 실행 때 덮어써집니다.
 
-**처음 테스트할 때 macOS 접근성/UI 자동화 권한 요청이 표시될 수 있습니다.** UI 테스트 중에는 앱 창이 화면에 나타나 클릭되므로 마우스/키보드를 건드리지 마세요. 해당 권한이 없거나 CI가 GUI 세션을 제공하지 않으면 UI 테스트가 실패할 수 있습니다. 이 경우 원인을 보고하고, 테스트를 건너뛴 상태를 PASS로 간주하지 마세요.
+**`verify.sh all`은 마우스·키보드를 쓰지 않습니다.** 화면 증거는 SwiftUI 화면을 창에 띄우지 않고 메모리에서 그리는 스냅샷 테스트(`AppTests/SnapshotTestCase.swift`)로 남기고, 단위 테스트가 앱을 호스트로 실행할 때도 창을 띄우거나 앞으로 나오지 않습니다(`App/NativeStarterApp.swift`의 `AppEntry`). 그래서 작업하면서 검증을 돌려도 됩니다.
+
+실제 클릭 흐름을 확인하는 UI 테스트(`AppUITests`)는 앱 창을 띄우고 마우스·키보드를 조작합니다. macOS에는 화면 없는(headless) UI 테스트가 없기 때문입니다. 그래서 UI 테스트는 **GitHub CI에서 push/PR마다 실행**하고(`full` 모드), 로컬에서는 사람이 허락할 때만 `AI_UI_CONTROL=1 ./scripts/verify.sh full`로 실행합니다. 이 변수 없이 `ui`/`full`을 실행하면 스크립트가 거부합니다(종료 코드 2). 로컬 UI 테스트를 처음 실행하면 macOS 접근성/UI 자동화 권한 요청이 표시될 수 있습니다.
 
 ## 2. 실행 결과
 `.artifacts/`는 이름이 점으로 시작하므로 Finder와 `ls`에서 기본적으로 숨겨집니다.
@@ -34,23 +36,24 @@ open NativeStarter.xcodeproj   # 이름을 바꿨다면 <Name>.xcodeproj
 - `verification.md`: 항목별 결과와 사람 검토 체크리스트
 - `xcodebuild.log`: 빌드 및 XCTest 로그
 - `results.xcresult`: Xcode 테스트 결과 및 스크린샷 첨부물
-- `attachments/`: `xcresulttool`로 추출한 원본 첨부물과 `manifest.json` (실패 시 화면 녹화 mp4 포함)
+- `attachments/`: `xcresulttool`로 추출한 원본 첨부물과 `manifest.json`
 - `screenshots/<테스트 번들>.<테스트명>/<첨부 이름>.png`: 테스트 이름별로 정리한 스크린샷
 - `test-summary.json`: xcresult 기준 테스트 합계와 실패 메시지
 - `warnings.log`: 컴파일러/링커 경고 (개수는 보고서에 표시, 실패 처리하지 않음)
 
 `.artifacts/latest-run`에는 마지막 실행 폴더 경로가 기록됩니다.
 
-`verification.md`에는 린트, 빌드, 단위 테스트, UI 테스트, xcresult 합계, 스크린샷 수가 각각 PASS/FAIL/NOT RUN으로 기록됩니다. 다음 경우는 모두 **FAIL(종료 코드 1)** 입니다: 린트 위반, 컴파일 실패, 테스트 실패/크래시, 실행된 테스트 0개, xcresult 판독 불가, UI 모드인데 스크린샷 0장. 잘못된 인자, 환경 오류, 동시 실행은 종료 코드 2입니다.
+`verification.md`에는 린트, 빌드, 단위 테스트, UI 테스트, xcresult 합계, 스크린샷 수가 각각 PASS/FAIL/NOT RUN으로 기록됩니다. 다음 경우는 모두 **FAIL(종료 코드 1)** 입니다: 린트 위반, 컴파일 실패, 테스트 실패/크래시, 실행된 테스트 0개, xcresult 판독 불가, `all`/`ui`/`full` 모드인데 스크린샷 0장, 빈 화면 스냅샷, 이름 규칙 밖의 자동 첨부(화면 녹화 등). 잘못된 인자, 환경 오류, 동시 실행은 종료 코드 2입니다.
 
 검증 종료 코드가 0이어도 **스크린샷은 사람이 직접 확인해야 합니다.** 화면이 정상이라고 자동 승인한 것이 아닙니다.
 
 ## 3. 명령어
 ```bash
-./scripts/verify.sh build   # 빌드 (UI 화면 캡처 없음)
-./scripts/verify.sh unit    # 단위 테스트만
-./scripts/verify.sh ui      # UI 테스트 + 스크린샷 첨부
-./scripts/verify.sh all     # 전체 테스트
+./scripts/verify.sh all     # 기본: 린트 + 빌드 + 단위 테스트 + 화면 밖 스냅샷 (화면 조작 없음)
+./scripts/verify.sh build   # 빌드만
+./scripts/verify.sh unit    # 단위 테스트만 (스냅샷 포함, 스크린샷 수 검사 안 함)
+AI_UI_CONTROL=1 ./scripts/verify.sh full  # all + 실제 클릭 UI 테스트 (마우스·키보드 사용, CI 기본)
+AI_UI_CONTROL=1 ./scripts/verify.sh ui    # UI 테스트만 (마우스·키보드 사용)
 ./scripts/prune-evidence.sh # 실행별 크기/결과 목록만 표시 (삭제하지 않음)
 ./scripts/check-spec.sh docs/PRODUCT_SPEC.md  # 명세 승인/형식 검사 (4절)
 ./scripts/new-project.sh --spec <명세.md>     # 승인된 명세로 새 프로젝트 만들기 (5절)
@@ -78,7 +81,7 @@ open NativeStarter.xcodeproj   # 이름을 바꿨다면 <Name>.xcodeproj
 
 > docs/PRODUCT_SPEC.md의 F-1을 구현해. 먼저 scripts/check-spec.sh docs/PRODUCT_SPEC.md 를 실행해서 통과하지 않으면 멈춰. 완료 시 scripts/verify.sh all을 실행하고, 스크린샷을 직접 확인한 뒤 명세의 검증 결과를 채워. 실행할 수 없는 검증은 NOT RUN으로 보고하고 성공했다고 주장하지 마. 커밋/푸시는 하지 마.
 
-UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이동 및 스크린샷 시점을 확장하세요. 기본 테스트는 카운터의 최초 실행/증가 전/증가 후/초기화 후 상태를 캡처합니다.
+화면 상태의 증거는 `AppTests`의 스냅샷 테스트로 남깁니다. 뷰가 원하는 상태를 생성자로 받게 하고(예: `ContentView(initialCount: 2)`), assertion 뒤에 `snapshot(뷰, name: "02-count-2")`를 부릅니다. 빈 화면으로 그려지면 테스트가 실패합니다. 실제 클릭 흐름은 `AppUITests/<Name>UITests.swift`에 작성하며 CI에서 실행됩니다. 기본 UI 테스트는 카운터의 최초 실행/증가 전/증가 후/초기화 후 상태를 캡처합니다.
 - 스크린샷은 `capture("NN-상태-설명")` 형식으로 이름을 붙입니다 (예: `01-initial-launch`, `03-after-increment`). 이 이름이 `screenshots/` 아래 파일명이 됩니다.
 - macOS에서 SwiftUI `Text`의 문자열은 접근성 `label`이 아니라 `value`로 노출됩니다. 테스트의 `text(of:)` 도우미를 사용하고, `contains` 대신 정확히 일치하는지 비교하세요.
 - 상태 변화는 반드시 assertion으로 검증하고, 스크린샷은 그 뒤에 증거로 남깁니다.
@@ -132,7 +135,8 @@ UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이�
 - `전체 결과: PASS`는 해당 `모드`에서 실행한 모든 검사(린트, 빌드, 테스트, 스크린샷 추출)가 통과했다는 뜻입니다. `NOT RUN` 항목은 검증되지 않은 것입니다.
 - 보고서의 `화면 검토: PENDING`은 스크립트가 바꾸지 않습니다. 이미지를 직접 확인한 사람(또는 이미지를 볼 수 있는 에이전트)이 판정합니다.
 - 스크린샷은 모양/상태 증거입니다. 기능의 정확성은 assertion 및 로그로 확인합니다.
-- UI 자동화는 접근성 및 실행 환경에 영향을 받습니다. CI는 기본적으로 **단위 테스트만** 수행합니다. UI 테스트는 로컬 GUI 세션에서 실행을 권장합니다. `.github/workflows/verify.yml`은 2026-11-18 GitHub macos-15 러너(macOS 15.8.2, Xcode 16.4)에서 단위 테스트 6개 PASS를 확인했습니다.
+- 스냅샷은 화면 밖에서 그린 이미지라 실제 창의 테두리, 포커스, 클릭 반응은 담지 않습니다. 그 부분은 UI 테스트가 확인합니다.
+- UI 자동화는 접근성 및 실행 환경에 영향을 받습니다. CI(`.github/workflows/verify.yml`)는 push/PR마다 `verify.sh full`(단위 + 스냅샷 + UI 테스트)을 실행하고, `verification.md`를 GitHub 실행 요약에 표시하며 스크린샷을 아티팩트(7일)로 올립니다.
 - 코드 서명은 로컬 ad-hoc(`CODE_SIGN_IDENTITY = -`, 팀/인증서 불필요)입니다. Apple Silicon은 서명되지 않은 UI 테스트 러너를 종료시키므로 `CODE_SIGNING_ALLOWED=NO`를 쓰지 마세요. ad-hoc 서명으로 App Sandbox 권한이 실제로 적용됩니다. 배포용 Developer ID 서명과 공증은 `scripts/release.sh`가 담당합니다 (8절).
 - 테스트 타깃만 macOS 14.0으로 빌드합니다 (현재 XCTest가 14.0+용). 앱의 최소 지원 버전은 13.0이지만 macOS 13 실기기에서는 검증하지 않았습니다.
 - 개인정보, 인증 토큰, 사용자가 실제 작성한 문서가 화면에 노출되면 캡처를 공유하지 마세요.

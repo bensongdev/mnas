@@ -88,11 +88,13 @@ report() {
 }
 fail() { step "$1" "FAIL ($2)"; report FAIL; exit 1; }
 
-# ① 사전 검증: 테스트를 통과하지 못한 코드는 배포하지 않는다.
-if ./scripts/verify.sh all >"$OUT/verify.log" 2>&1; then
-  step "① 사전 검증 (verify.sh all)" "PASS ($(cat .artifacts/latest-run))"
+# ① 사전 검증: 테스트를 통과하지 못한 코드는 배포하지 않는다. 배포는 사람이 직접 실행하는 작업이므로
+# 실제 클릭 UI 테스트까지 돌린다(full). 그동안 마우스·키보드를 쓰지 말라고 안내한다.
+echo "사전 검증(verify.sh full)을 시작합니다. UI 테스트가 끝날 때까지(수 분) 마우스와 키보드를 쓰지 마세요."
+if AI_UI_CONTROL=1 ./scripts/verify.sh full >"$OUT/verify.log" 2>&1; then
+  step "① 사전 검증 (verify.sh full)" "PASS ($(cat .artifacts/latest-run))"
 else
-  fail "① 사전 검증 (verify.sh all)" "verify.log 참고"
+  fail "① 사전 검증 (verify.sh full)" "verify.log 참고"
 fi
 
 # ② Release 아카이브 → Developer ID 내보내기. 내보내기 단계에서 Xcode가 배포용으로 다시 서명하며

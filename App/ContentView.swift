@@ -1,7 +1,12 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var count = Counter.initialValue
+    @State private var count: Int
+
+    // 스냅샷 테스트가 원하는 상태의 화면을 바로 그릴 수 있도록 시작 값을 받는다.
+    init(initialCount: Int = Counter.initialValue) {
+        _count = State(initialValue: initialCount)
+    }
 
     var body: some View {
         VStack(spacing: 20) {

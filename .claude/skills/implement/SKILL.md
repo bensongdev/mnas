@@ -1,6 +1,6 @@
 ---
 name: implement
-description: 승인된 docs/PRODUCT_SPEC.md의 기능(F-n) 하나를 수용 기준대로 구현하고 verify.sh all로 검증한 뒤 명세에 결과를 기록한다.
+description: 승인된 docs/PRODUCT_SPEC.md의 기능(F-n) 하나를 수용 기준대로 구현하고 verify.sh all(화면 조작 없음)로 검증한 뒤 명세에 결과를 기록한다.
 argument-hint: <기능 번호, 예: F-1>
 disable-model-invocation: true
 ---
@@ -20,12 +20,13 @@ disable-model-invocation: true
 ## 2. 구현
 - `AGENTS.md`의 아키텍처·완료 정의·테스트 작성 규칙을 따른다.
 - 명세의 수용 기준(`F-n.AC-n`)마다 테스트를 만든다. 테스트 이름이나 주석에 해당 수용 기준 번호를 적는다.
-- 스크린샷 이름은 테스트 계획 표에 적힌 이름을 그대로 쓴다.
+- 스크린샷 이름은 테스트 계획 표에 적힌 이름을 그대로 쓴다. 화면 상태는 스냅샷 테스트(`SnapshotTestCase.snapshot`)로, 클릭 흐름은 UI 테스트로 만든다.
 - 명세에 없는 기능, 권한, 의존성, 네트워크 호출은 추가하지 않는다. 필요해 보이면 멈추고 `/spec`으로 명세 변경을 제안한다.
 - 명세 자체(수용 기준, 범위)를 바꾸지 않는다.
 
 ## 3. 검증
 - `./scripts/verify.sh all` 실행 → 실행 폴더의 `verification.md` 확인.
+- UI 테스트를 로컬에서 돌리는 `full`/`ui` 모드는 사용자의 마우스·키보드를 빼앗는다. 사용자가 허락한 경우에만 `AI_UI_CONTROL=1 ./scripts/verify.sh full`을 실행하고, 아니면 UI 관련 수용 기준은 `NOT RUN (CI에서 확인 필요)`으로 기록한다.
 - 스크린샷을 직접 열어 확인한다.
 
 ## 4. 명세에 기록 (이 단계에서 명세에 쓰는 것은 이 두 가지뿐)
