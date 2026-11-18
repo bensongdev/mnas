@@ -1,0 +1,17 @@
+included:
+  - App
+  - AppTests
+  - AppUITests
+excluded:
+  - .build
+  - .artifacts
+  - DerivedData
+line_length:
+  warning: 120
+  error: 180
+function_body_length:
+  warning: 60
+type_body_length:
+  warning: 250
+identifier_name:
+  min_length: 2

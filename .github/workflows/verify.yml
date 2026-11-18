@@ -1,0 +1,28 @@
+name: macOS 검증
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  verify:
+    runs-on: macos-15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode 버전 확인
+        run: xcodebuild -version
+      - name: 도구 설치
+        run: brew install xcodegen swiftlint
+      - name: 프로젝트 생성
+        run: ./scripts/bootstrap.sh
+      - name: 빌드 및 단위 테스트
+        run: ./scripts/verify.sh unit
+      - name: 실패해도 증거 업로드
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-verification
+          path: .artifacts/runs/
+          retention-days: 7

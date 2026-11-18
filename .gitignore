@@ -1,0 +1,14 @@
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+.artifacts/
+.build/
+*.xcresult
+*.xcarchive
+.env
+.env.*
+!.env.example
+
+# XcodeGen이 project.yml로부터 생성 (scripts/bootstrap.sh)
+*.xcodeproj/

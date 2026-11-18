@@ -1,0 +1,65 @@
+# 앱의 이름과 ID는 여기서 관리한다. 템플릿을 재사용할 때는 scripts/rename-app.sh 를 쓴다.
+# 타깃 이름 규칙(<Name>, <Name>Tests, <Name>UITests)을 지킬 것:
+# scripts/verify.sh가 `name`에서 스킴과 테스트 번들 이름을 만든다.
+name: NativeStarter
+options:
+  # 번들 ID는 <bundleIdPrefix>.<타깃이름> 으로 생성된다.
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    macOS: '13.0'
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    MACOSX_DEPLOYMENT_TARGET: '13.0'
+    # 로컬 실행용 ad-hoc 서명: 개발자 팀이나 인증서가 필요 없다. Apple Silicon은 서명되지 않은
+    # UI 테스트 러너를 강제 종료하므로 CODE_SIGNING_ALLOWED=NO를 쓰면 UI 테스트가 깨진다.
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: '-'
+targets:
+  NativeStarter:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+        ENABLE_APP_SANDBOX: YES
+        SWIFT_EMIT_LOC_STRINGS: YES
+  NativeStarterTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: AppTests
+    dependencies:
+      - target: NativeStarter
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        # 현재 XCTest는 macOS 14+용이다. 테스트는 배포되지 않으므로 앱은 13.0을 유지한다.
+        MACOSX_DEPLOYMENT_TARGET: '14.0'
+        TEST_HOST: '$(BUILT_PRODUCTS_DIR)/NativeStarter.app/Contents/MacOS/NativeStarter'
+        BUNDLE_LOADER: '$(TEST_HOST)'
+  NativeStarterUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: AppUITests
+    dependencies:
+      - target: NativeStarter
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        MACOSX_DEPLOYMENT_TARGET: '14.0'
+        TEST_TARGET_NAME: NativeStarter
+schemes:
+  NativeStarter:
+    build:
+      targets:
+        NativeStarter: all
+    test:
+      targets:
+        - NativeStarterTests
+        - NativeStarterUITests
