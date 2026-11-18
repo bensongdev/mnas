@@ -52,7 +52,9 @@ open NativeStarter.xcodeproj   # 이름을 바꿨다면 <Name>.xcodeproj
 ./scripts/verify.sh ui      # UI 테스트 + 스크린샷 첨부
 ./scripts/verify.sh all     # 전체 테스트
 ./scripts/prune-evidence.sh # 실행별 크기/결과 목록만 표시 (삭제하지 않음)
-./scripts/new-project.sh MyApp com.mycompany  # 이 템플릿으로 새 프로젝트 만들기 (5절)
+./scripts/check-spec.sh docs/PRODUCT_SPEC.md  # 명세 승인/형식 검사 (4절)
+./scripts/new-project.sh --spec <명세.md>     # 승인된 명세로 새 프로젝트 만들기 (5절)
+./scripts/new-project.sh MyApp com.mycompany  # 이름만 정해 새 프로젝트 만들기
 ./scripts/rename-app.sh MyApp com.mycompany  # 현재 폴더의 앱 이름/번들 ID 변경
 ```
 
@@ -60,10 +62,21 @@ open NativeStarter.xcodeproj   # 이름을 바꿨다면 <Name>.xcodeproj
 
 `AI_DERIVED_DATA_PATH=/Volumes/ExternalSSD/BuildCache ./scripts/verify.sh all` 로 빌드 캐시를 외장 SSD에 둘 수도 있습니다. 외장 SSD를 이동/제거하면 빌드 캐시 경로가 유효하지 않을 수 있습니다.
 
-## 4. AI 에이전트 사용법
-`AGENTS.md`를 프로젝트 루트에 둡니다. 에이전트에게 다음 메시지를 줍니다.
+## 4. AI 에이전트 사용법: 명세 → 승인 → 구현
+기능은 사람이 승인한 제품 명세(`docs/PRODUCT_SPEC.md`)에 있는 것만 구현합니다. Claude Code에서는 다음 명령을 씁니다.
 
-> docs/FEATURE_TEMPLATE.md에 수용 기준을 정리한 후 기능을 구현해. 완료 시 scripts/verify.sh all을 실행하고, 영향 받은 화면의 UI 테스트 스크린샷과 verification.md를 제출해. 실행할 수 없는 검증은 NOT RUN으로 보고하고 성공했다고 주장하지 마. .artifacts의 이미지도 직접 확인해 문제를 보고해. 커밋/푸시는 하지 마.
+| 단계 | 누가 | 명령 / 할 일 |
+|---|---|---|
+| 1. 명세 초안 | AI | 새 앱: `/new-app <요구사항>` (5절) · 기존 프로젝트의 변경: `/spec <바뀐 요구사항>` |
+| 2. 검토·승인 | 사람 | 명세를 읽고 고친 뒤 `- 상태: 초안` → `- 상태: 승인`, 미결 질문은 `- 없음` |
+| 3. 구현·검증 | AI | `/implement F-1` → 승인 검사(`check-spec.sh`) 통과 시에만 구현, `verify.sh all`, 명세에 검증 결과 기록 |
+| 4. 최종 판정 | 사람 | `verification.md`와 스크린샷 확인, 수용 기준 체크박스 체크 |
+
+- 명세 형식은 `docs/PRODUCT_SPEC_TEMPLATE.md`입니다. 기능은 `F-1`, 수용 기준은 `F-1.AC-1`처럼 번호를 붙이고, 모든 수용 기준은 테스트 계획 표에 연결되어야 합니다.
+- `./scripts/check-spec.sh docs/PRODUCT_SPEC.md`가 승인 여부와 형식을 검사합니다(통과 0, 문제 1, 사용법 오류 2). `--draft`는 초안의 형식만 봅니다.
+- Claude Code가 아닌 에이전트에는 다음처럼 요청합니다.
+
+> docs/PRODUCT_SPEC.md의 F-1을 구현해. 먼저 scripts/check-spec.sh docs/PRODUCT_SPEC.md 를 실행해서 통과하지 않으면 멈춰. 완료 시 scripts/verify.sh all을 실행하고, 스크린샷을 직접 확인한 뒤 명세의 검증 결과를 채워. 실행할 수 없는 검증은 NOT RUN으로 보고하고 성공했다고 주장하지 마. 커밋/푸시는 하지 마.
 
 UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이동 및 스크린샷 시점을 확장하세요. 기본 테스트는 카운터의 최초 실행/증가 전/증가 후/초기화 후 상태를 캡처합니다.
 - 스크린샷은 `capture("NN-상태-설명")` 형식으로 이름을 붙입니다 (예: `01-initial-launch`, `03-after-increment`). 이 이름이 `screenshots/` 아래 파일명이 됩니다.
@@ -71,7 +84,22 @@ UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이�
 - 상태 변화는 반드시 assertion으로 검증하고, 스크린샷은 그 뒤에 증거로 남깁니다.
 
 ## 5. 다른 앱에 재사용
-1. 새 프로젝트를 만듭니다.
+1. **권장: 명세부터 만들고 프로젝트를 만듭니다.**
+   ```text
+   /new-app 할 일 목록 앱. 마감일이 지나면 빨간색으로 표시해 줘
+   ```
+   Claude Code에서 아무 폴더에서나 실행하면 `~/app-specs/<앱이름>/PRODUCT_SPEC.md`에 명세 초안이 생깁니다(프로젝트는 아직 만들지 않음). 명세를 검토해 상태를 `승인`으로 바꾼 뒤:
+   ```bash
+   new-mac-app --spec ~/app-specs/<앱이름>/PRODUCT_SPEC.md
+   ```
+   명세 검사를 통과해야만 만들어지고, 명세의 앱 이름·번들 ID 접두사·최소 macOS 버전이 적용되며 명세는 `docs/PRODUCT_SPEC.md`로 복사됩니다. 그 다음은 4절의 `/implement F-1`부터입니다.
+
+   `/new-app`은 사용자 전역 스킬이라 한 번 설치해야 합니다.
+   ```bash
+   mkdir -p ~/.claude/skills
+   ln -s "$PWD/claude/global-skills/new-app" ~/.claude/skills/new-app
+   ```
+   이름과 번들 ID만 정해 바로 만들 수도 있습니다.
    ```bash
    ./scripts/new-project.sh MyApp com.mycompany            # 홈 폴더에 ~/MyApp 생성
    ./scripts/new-project.sh MyApp com.mycompany ~/Dev/MyApp # 만들 폴더 지정
@@ -89,7 +117,7 @@ UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이�
    기존 `NativeStarter.xcodeproj`는 남겨 두므로, 새 이름으로 빌드되는 것을 확인한 뒤 직접 지우세요.
    스크립트는 `project.yml`의 `name:`에서 scheme(`<Name>`)과 테스트 번들(`<Name>Tests`, `<Name>UITests`)을 읽습니다. 이 규칙을 벗어나면 `SCHEME`, `UNIT_TARGET`, `UI_TARGET` 환경 변수로 지정하세요.
 3. `App/`에 실제 코드와 모델을 넣고, `AppTests`/`AppUITests`에 각 기능의 테스트를 작성합니다.
-4. 요구사항은 `docs/FEATURE_TEMPLATE.md`에서 시작합니다.
+4. 요구사항은 `docs/PRODUCT_SPEC.md`에 둡니다 (명세 없이 만들었다면 `/spec`이 템플릿에서 만들어 줍니다).
 5. `scripts/verify.sh all` 실행 결과와 화면 증거를 승인합니다.
 
 ## 6. 공간 관리 (8GB/256GB 맥북)

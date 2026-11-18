@@ -12,3 +12,6 @@ DerivedData/
 
 # XcodeGen이 project.yml로부터 생성 (scripts/bootstrap.sh)
 *.xcodeproj/
+
+# Claude Code 개인 설정 (프로젝트 공용 스킬은 .claude/skills/에 커밋)
+.claude/settings.local.json
