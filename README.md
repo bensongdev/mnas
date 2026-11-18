@@ -91,6 +91,39 @@ UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이�
 - 보고서의 `화면 검토: PENDING`은 스크립트가 바꾸지 않습니다. 이미지를 직접 확인한 사람(또는 이미지를 볼 수 있는 에이전트)이 판정합니다.
 - 스크린샷은 모양/상태 증거입니다. 기능의 정확성은 assertion 및 로그로 확인합니다.
 - UI 자동화는 접근성 및 실행 환경에 영향을 받습니다. CI는 기본적으로 **단위 테스트만** 수행합니다. UI 테스트는 로컬 GUI 세션에서 실행을 권장합니다. `.github/workflows/verify.yml`은 2026-11-18 GitHub macos-15 러너(macOS 15.8.2, Xcode 16.4)에서 단위 테스트 6개 PASS를 확인했습니다.
-- 코드 서명은 로컬 ad-hoc(`CODE_SIGN_IDENTITY = -`, 팀/인증서 불필요)입니다. Apple Silicon은 서명되지 않은 UI 테스트 러너를 종료시키므로 `CODE_SIGNING_ALLOWED=NO`를 쓰지 마세요. ad-hoc 서명으로 App Sandbox 권한이 실제로 적용됩니다. 배포용 Developer ID 서명/공증은 별도 설정과 검증이 필요합니다.
+- 코드 서명은 로컬 ad-hoc(`CODE_SIGN_IDENTITY = -`, 팀/인증서 불필요)입니다. Apple Silicon은 서명되지 않은 UI 테스트 러너를 종료시키므로 `CODE_SIGNING_ALLOWED=NO`를 쓰지 마세요. ad-hoc 서명으로 App Sandbox 권한이 실제로 적용됩니다. 배포용 Developer ID 서명과 공증은 `scripts/release.sh`가 담당합니다 (8절).
 - 테스트 타깃만 macOS 14.0으로 빌드합니다 (현재 XCTest가 14.0+용). 앱의 최소 지원 버전은 13.0이지만 macOS 13 실기기에서는 검증하지 않았습니다.
 - 개인정보, 인증 토큰, 사용자가 실제 작성한 문서가 화면에 노출되면 캡처를 공유하지 마세요.
+
+## 8. 배포: Developer ID 서명과 Apple 공증
+이 템플릿으로 만든 앱을 다른 사람의 Mac에서 경고 없이 실행되도록 배포할 때 씁니다. 앱을 Apple 서버로 보내는 외부 작업이므로 평소 검증(`verify.sh`)과 분리되어 있고, 배포할 때만 실행합니다. 예제 앱(NativeStarter)은 배포 대상이 아니므로 공증하지 않습니다.
+
+**준비 (한 번만)**
+- 키체인에 `Developer ID Application` 인증서 (Apple Developer 계정에서 발급, `security find-identity -v -p codesigning`으로 확인)
+- 공증용 로그인 정보를 키체인에 저장합니다 (Mac마다 한 번이며, 이 템플릿으로 만든 모든 프로젝트가 같이 씁니다). 비밀번호 칸에는 [appleid.apple.com](https://appleid.apple.com)에서 만든 **앱 암호**를 입력합니다.
+  ```bash
+  xcrun notarytool store-credentials "mac-native-ai-notary" --apple-id <애플ID> --team-id <팀ID>
+  ```
+  계정 정보는 키체인에만 저장되고 저장소에는 들어가지 않습니다. 팀 ID는 스크립트가 인증서 이름에서 읽습니다.
+
+**실행**
+```bash
+./scripts/release.sh --sign-only   # 1~3단계만: Apple로 보내지 않고 서명까지 점검 (계정 정보 불필요)
+./scripts/release.sh               # 전체: 서명 → 공증 → staple → 배포 검증
+```
+1. `verify.sh all` 사전 검증 (실패하면 배포하지 않음)
+2. Release 아카이브(`xcodebuild archive`) → Developer ID로 내보내기(`-exportArchive`, method `developer-id`). Xcode가 배포용으로 다시 서명하며 디버그 권한만 빼고 앱의 권한은 유지합니다.
+3. 서명 검사: 유효성, Developer ID, 타임스탬프, Hardened Runtime, 디버그 권한(`get-task-allow`) 없음, **개발 빌드에 있던 권한(예: App Sandbox)이 배포 빌드에서 빠지지 않았는지**
+4. Apple 공증 제출 후 결과 대기 (보통 수 분)
+5. 공증 티켓 첨부 (`stapler`)
+6. Gatekeeper 배포 검증 (`spctl`의 `Notarized Developer ID`, `syspolicy_check distribution`)
+7. 배포 파일 `<Name>-<버전>.zip` 생성
+
+결과는 `.artifacts/releases/<시각>/`에 저장됩니다. `release-verification.md`(단계별 PASS/FAIL/NOT RUN), `.xcarchive`(크래시 분석용 dSYM 포함), 공증 로그(`notary-log.json`), 서명 정보, 배포 zip이 들어 있습니다. 한 단계라도 실패하면 즉시 멈추고 종료 코드 1을 반환합니다.
+
+- 버전은 `project.yml`의 `MARKETING_VERSION`(표시 버전)과 `CURRENT_PROJECT_VERSION`(빌드 번호)에서 바꿉니다.
+- 실제 배포 전에는 번들 ID 접두사를 본인 도메인으로 바꾸세요 (`rename-app.sh`). `com.example`로도 공증은 됩니다.
+- 처음 서명할 때 macOS가 "codesign이 키체인의 키에 접근하려고 합니다"라고 물으면 **항상 허용**을 선택하세요.
+- 환경 변수: `NOTARY_PROFILE`(프로필 이름, 기본 `mac-native-ai-notary`), `SIGN_IDENTITY`(Developer ID 인증서가 여러 개일 때).
+- 검증 상태: 2026-11-18 예제 앱으로 `--sign-only`(1~3단계)를 실제 실행해 PASS를 확인했습니다. 4~7단계(공증, staple, Gatekeeper)는 첫 실제 배포 때 처음 실행되므로, 그 결과 보고서를 꼭 확인하세요.
+- 공증할 때마다 앱이 Apple로 전송되고 계정에 제출 기록이 남습니다. CI 자동 공증은 인증서와 계정 정보를 GitHub Secrets에 올려야 하므로 설정하지 않았습니다.

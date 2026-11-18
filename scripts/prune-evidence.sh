@@ -12,6 +12,7 @@ for run in "$TARGET"/*/; do
   printf '%-8s %-6s %s\n' "$(du -sh "$run" | cut -f1)" "${result:-?}" "$run"
 done
 printf '\n실행 폴더 합계: %s\n' "$(du -sh "$TARGET" | cut -f1)"
+if [[ -d .artifacts/releases ]]; then printf '배포 결과 (.artifacts/releases): %s\n' "$(du -sh .artifacts/releases | cut -f1)"; fi
 if [[ -d "$DERIVED" ]]; then printf '빌드 캐시 (%s): %s\n' "$DERIVED" "$(du -sh "$DERIVED" | cut -f1)"; fi
 printf '\n이 스크립트는 목록만 보여 줍니다. 확인한 뒤 필요한 것만 직접 지우세요. 예:\n'
 printf '  rm -rf %s/<RUN>       # 확인한 실행 폴더 하나\n' "$TARGET"

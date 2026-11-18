@@ -28,6 +28,14 @@ targets:
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         ENABLE_APP_SANDBOX: YES
         SWIFT_EMIT_LOC_STRINGS: YES
+        # 배포 버전(CFBundleShortVersionString)과 빌드 번호(CFBundleVersion).
+        MARKETING_VERSION: '1.0'
+        CURRENT_PROJECT_VERSION: '1'
+      configs:
+        # 공증 필수 조건. Debug는 UI 테스트를 위해 그대로 둔다.
+        # Developer ID 서명은 scripts/release.sh가 빌드 시점에 지정한다.
+        Release:
+          ENABLE_HARDENED_RUNTIME: YES
   NativeStarterTests:
     type: bundle.unit-test
     platform: macOS

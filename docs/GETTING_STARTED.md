@@ -267,6 +267,7 @@ AI 코딩 에이전트(예: Claude Code)를 이 프로젝트 폴더에서 실행
 ## 8. 다음 단계
 
 - 내 앱으로 바꾸기: 이 폴더를 복사한 뒤 `./scripts/rename-app.sh 내앱이름 com.내이름` 을 실행합니다. 자세한 내용은 [README의 '다른 앱에 재사용'](../README.md#5-다른-앱에-재사용)을 보세요.
+- 다른 사람에게 앱 나눠 주기 (Apple 개발자 계정 필요): [README의 '배포' 절](../README.md#8-배포-developer-id-서명과-apple-공증)
 - 더 자세한 동작 원리, 저장 공간 관리, 한계: [README.md](../README.md)
 - AI 에이전트가 지키는 규칙: [AGENTS.md](../AGENTS.md)
 
@@ -293,7 +294,9 @@ AI 코딩 에이전트(예: Claude Code)를 이 프로젝트 폴더에서 실행
 | 번들 ID (Bundle ID) | 앱의 고유 이름. 예: `com.example.NativeStarter` |
 | DerivedData | 빌드 중간 결과물을 모아 두는 캐시 폴더. 지워도 다시 빌드하면 생김 |
 | `.xcresult` | Xcode 테스트 결과 파일 |
-| 코드 서명 (ad-hoc) | 앱에 서명을 붙이는 과정. 여기서는 내 Mac에서만 실행하는 간단한 서명 |
+| 코드 서명 (ad-hoc) | 앱에 서명을 붙이는 과정. 개발 중에는 내 Mac에서만 실행하는 간단한 서명을 씀 |
+| Developer ID / 공증 | 다른 Mac에 배포하기 위한 Apple 인증 서명 / Apple이 앱을 검사해 안전하다고 확인해 주는 절차 |
+| Gatekeeper | 인터넷에서 받은 앱을 실행 전에 검사하는 macOS 보안 기능 |
 | App Sandbox | 앱이 허락된 범위 밖의 파일·기능에 접근하지 못하게 막는 macOS 보안 장치 |
 | AI 에이전트 | 지시를 받아 직접 파일을 고치고 명령을 실행하는 AI 도구 |
 | 커밋 (commit) / Git | 변경 내용을 저장 기록으로 남기는 것 / 그 기록을 관리하는 도구 |

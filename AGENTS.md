@@ -36,7 +36,8 @@
 - 새 컴파일러/링커 경고를 만들지 않는다. 경고가 생기면 보고서에 개수와 원인을 적는다.
 - 생성된 증거는 프로젝트 소스 폴더가 아닌 `.artifacts/`(gitignore 대상)에 둔다.
 - 실패 시 닫힘(fail closed): 검증을 실행하지 못했다면 완료 상태는 UNVERIFIED다.
-- 사용자 지시 없이 `git commit`, `git push`, 배포, 공증(notarize)을 실행하지 않는다.
+- 사용자 지시 없이 `git commit`, `git push`, 배포, 공증(notarize)을 실행하지 않는다. 공증은 `scripts/release.sh`로만 하고, 결과는 `.artifacts/releases/<시각>/release-verification.md` 기준으로 보고한다.
+- 서명 인증서, 앱 암호, 팀 ID 등 계정 정보를 저장소나 로그에 넣지 않는다. 공증 로그인 정보는 키체인 프로필로만 사용한다.
 
 ## 응답 템플릿
 - 구현 내용: ...
