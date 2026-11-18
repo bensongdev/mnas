@@ -266,7 +266,7 @@ AI 코딩 에이전트(예: Claude Code)를 이 프로젝트 폴더에서 실행
 
 ## 8. 다음 단계
 
-- 내 앱으로 바꾸기: 이 폴더를 복사한 뒤 `./scripts/rename-app.sh 내앱이름 com.내이름` 을 실행합니다. 자세한 내용은 [README의 '다른 앱에 재사용'](../README.md#5-다른-앱에-재사용)을 보세요.
+- 내 앱 시작하기: 이 폴더에서 `./scripts/new-project.sh 내앱이름 com.내이름` 을 실행하면 홈 폴더에 `내앱이름` 폴더가 새 프로젝트로 만들어집니다. 그 폴더로 이동해 `./scripts/verify.sh all`부터 실행하세요. 자세한 내용은 [README의 '다른 앱에 재사용'](../README.md#5-다른-앱에-재사용)을 보세요.
 - 다른 사람에게 앱 나눠 주기 (Apple 개발자 계정 필요): [README의 '배포' 절](../README.md#8-배포-developer-id-서명과-apple-공증)
 - 더 자세한 동작 원리, 저장 공간 관리, 한계: [README.md](../README.md)
 - AI 에이전트가 지키는 규칙: [AGENTS.md](../AGENTS.md)

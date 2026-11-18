@@ -52,7 +52,8 @@ open NativeStarter.xcodeproj   # 이름을 바꿨다면 <Name>.xcodeproj
 ./scripts/verify.sh ui      # UI 테스트 + 스크린샷 첨부
 ./scripts/verify.sh all     # 전체 테스트
 ./scripts/prune-evidence.sh # 실행별 크기/결과 목록만 표시 (삭제하지 않음)
-./scripts/rename-app.sh MyApp com.mycompany  # 복제한 템플릿의 앱 이름/번들 ID 변경
+./scripts/new-project.sh MyApp com.mycompany  # 이 템플릿으로 새 프로젝트 만들기 (5절)
+./scripts/rename-app.sh MyApp com.mycompany  # 현재 폴더의 앱 이름/번들 ID 변경
 ```
 
 `verify.sh`는 실행할 때마다 `xcodegen generate --use-cache`로 `project.yml` 변경을 반영하고, `.artifacts/verify.lock`으로 동시 실행을 막습니다. 비정상 종료로 잠금이 남으면 실행 중인 검증이 없는지 확인한 뒤 해당 디렉터리를 지우세요.
@@ -70,8 +71,21 @@ UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이�
 - 상태 변화는 반드시 assertion으로 검증하고, 스크린샷은 그 뒤에 증거로 남깁니다.
 
 ## 5. 다른 앱에 재사용
-1. 디렉터리를 복제합니다 (`.artifacts/`와 `*.xcodeproj`는 복사하지 않아도 됩니다).
-2. `./scripts/rename-app.sh MyApp com.mycompany` 를 실행합니다. `project.yml`, Swift 파일 내용/파일명(`@testable import` 포함)을 바꾸고 아무것도 삭제하지 않습니다. 번들 ID는 `<bundleIdPrefix>.<타깃명>`으로 생성됩니다.
+1. 새 프로젝트를 만듭니다.
+   ```bash
+   ./scripts/new-project.sh MyApp com.mycompany            # 홈 폴더에 ~/MyApp 생성
+   ./scripts/new-project.sh MyApp com.mycompany ~/Dev/MyApp # 만들 폴더 지정
+   ```
+   마지막 커밋의 파일만 복사하고(`.artifacts/`, `*.xcodeproj`, 커밋하지 않은 변경은 제외), 앱 이름과 번들 ID를 바꾸고, `git init`과 Xcode 프로젝트 생성까지 합니다. 커밋은 하지 않습니다. 이미 있는 폴더에는 만들지 않습니다.
+
+   어느 폴더에서든 `new-mac-app MyApp com.mycompany`로 쓰려면 한 번만 설치합니다.
+   ```bash
+   mkdir -p ~/.local/bin
+   ln -s "$PWD/scripts/new-project.sh" ~/.local/bin/new-mac-app
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc   # 이미 PATH에 있으면 생략
+   ```
+   링크는 이 템플릿 폴더를 가리키므로 템플릿 폴더를 옮기면 다시 설치해야 합니다.
+2. 직접 복사한 폴더라면 `./scripts/rename-app.sh MyApp com.mycompany` 로 이름만 바꿀 수 있습니다(`new-project.sh`가 내부에서 쓰는 스크립트). `project.yml`, Swift 파일 내용/파일명(`@testable import` 포함)을 바꾸고 아무것도 삭제하지 않습니다. 번들 ID는 `<bundleIdPrefix>.<타깃명>`으로 생성됩니다.
    기존 `NativeStarter.xcodeproj`는 남겨 두므로, 새 이름으로 빌드되는 것을 확인한 뒤 직접 지우세요.
    스크립트는 `project.yml`의 `name:`에서 scheme(`<Name>`)과 테스트 번들(`<Name>Tests`, `<Name>UITests`)을 읽습니다. 이 규칙을 벗어나면 `SCHEME`, `UNIT_TARGET`, `UI_TARGET` 환경 변수로 지정하세요.
 3. `App/`에 실제 코드와 모델을 넣고, `AppTests`/`AppUITests`에 각 기능의 테스트를 작성합니다.
