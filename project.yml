@@ -68,6 +68,13 @@ schemes:
       targets:
         NativeStarter: all
     test:
+      # UI 테스트가 실패하면 Xcode는 기본값으로 화면 전체를 녹화해 .xcresult에 넣는다.
+      # 다른 앱 화면(개인 정보)이 증거에 남으므로 녹화 대신 스크린샷을 쓰고, Xcode가 자동으로 만드는
+      # 시스템 첨부는 남기지 않는다. 테스트가 .keepAlways로 직접 붙인 창 스크린샷은 영향을 받지 않는다.
+      # XcodeGen은 captureScreenshotsAutomatically가 false일 때만 systemAttachmentLifetime을 스킴에 쓴다.
+      preferredScreenCaptureFormat: screenshots
+      captureScreenshotsAutomatically: false
+      systemAttachmentLifetime: keepNever
       targets:
         - NativeStarterTests
         - NativeStarterUITests

@@ -136,6 +136,7 @@ UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이�
 - 코드 서명은 로컬 ad-hoc(`CODE_SIGN_IDENTITY = -`, 팀/인증서 불필요)입니다. Apple Silicon은 서명되지 않은 UI 테스트 러너를 종료시키므로 `CODE_SIGNING_ALLOWED=NO`를 쓰지 마세요. ad-hoc 서명으로 App Sandbox 권한이 실제로 적용됩니다. 배포용 Developer ID 서명과 공증은 `scripts/release.sh`가 담당합니다 (8절).
 - 테스트 타깃만 macOS 14.0으로 빌드합니다 (현재 XCTest가 14.0+용). 앱의 최소 지원 버전은 13.0이지만 macOS 13 실기기에서는 검증하지 않았습니다.
 - 개인정보, 인증 토큰, 사용자가 실제 작성한 문서가 화면에 노출되면 캡처를 공유하지 마세요.
+- Xcode는 기본값으로 UI 테스트가 실패하면 **화면 전체**를 녹화해 `.xcresult`에 넣습니다. 다른 앱의 개인 정보가 증거에 남으므로 `project.yml` 스킴에서 녹화와 자동 첨부를 끕니다(`preferredScreenCaptureFormat: screenshots`, `systemAttachmentLifetime: keepNever`). 테스트가 직접 붙인 창 스크린샷은 그대로 남습니다. 그래도 이름 규칙(`NN-상태-설명`) 밖의 첨부(녹화 등)가 나오면 `verify.sh`가 `## 자동 첨부 (FAIL)`로 보고하고 실패 처리합니다. 그런 실행 폴더는 열어 보지 말고 통째로 지우세요(2026-11-18, macOS 26.6.2, Xcode 27.0에서 설정 유무로 녹화 0개/2개 확인).
 
 ## 8. 배포: Developer ID 서명과 Apple 공증
 이 템플릿으로 만든 앱을 다른 사람의 Mac에서 경고 없이 실행되도록 배포할 때 씁니다. 앱을 Apple 서버로 보내는 외부 작업이므로 평소 검증(`verify.sh`)과 분리되어 있고, 배포할 때만 실행합니다. 예제 앱(NativeStarter)은 배포 대상이 아니므로 공증하지 않습니다.

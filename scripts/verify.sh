@@ -113,8 +113,11 @@ if [[ "$MODE" == ui || "$MODE" == all ]]; then UI="$(bundle_status "$UI_TARGET")
 case "$UNIT$UI" in *FAIL*) STATUS=1 ;; esac
 
 # 첨부물을 추출하고 스크린샷을 테스트별로 정리한다: screenshots/<테스트>/<첨부 이름>.png
+# 테스트가 이름 규칙(NN-상태-설명)으로 직접 붙인 PNG만 스크린샷으로 인정한다. 그 밖의 첨부(Xcode의 실패
+# 화면 녹화, 자동 스크린샷 등)는 화면 전체를 담아 개인 정보가 들어갈 수 있으므로 FAIL로 보고한다.
 EXPORT="NOT RUN (테스트를 실행하지 않음)"
 SHOTS=()
+STRAY=""; STRAY_COUNT=0
 if [[ "$ACTION" == test && -d "$RESULT" ]]; then
   ATT="$RUN/attachments"; mkdir -p "$ATT" "$RUN/screenshots"
   if xcrun xcresulttool export attachments --path "$RESULT" --output-path "$ATT" >"$RUN/export.log" 2>&1; then
@@ -125,17 +128,22 @@ if [[ "$ACTION" == test && -d "$RESULT" ]]; then
       a=0
       while FILE="$(plutil -extract "$t.attachments.$a.exportedFileName" raw -o - "$MANIFEST" 2>/dev/null)"; do
         NAME="$(plutil -extract "$t.attachments.$a.suggestedHumanReadableName" raw -o - "$MANIFEST")"
-        if [[ "$FILE" == *.png ]]; then
+        if [[ "$FILE" == *.png && "$NAME" =~ ^[0-9][0-9]-[^/]+$ ]]; then
           mkdir -p "$DIR"
           DEST="$DIR/$(printf '%s' "$NAME" | sed -E 's/_[0-9]+_[0-9A-F-]{36}//')"
           ln -f "$ATT/$FILE" "$DEST" 2>/dev/null || cp "$ATT/$FILE" "$DEST"
           SHOTS+=("${DEST#"$RUN"/}")
+        else
+          STRAY="${STRAY}- attachments/$FILE ($TEST_ID)"$'\n'; STRAY_COUNT=$((STRAY_COUNT + 1))
         fi
         a=$((a + 1))
       done
       t=$((t + 1))
     done
     EXPORT="EXPORTED (스크린샷 ${#SHOTS[@]}장)"
+    if [[ $STRAY_COUNT -gt 0 ]]; then
+      EXPORT="FAIL (스크린샷 ${#SHOTS[@]}장, 이름 규칙 밖의 자동 첨부 ${STRAY_COUNT}개: 화면 녹화 등 개인 정보 포함 가능)"; STATUS=1
+    fi
     if [[ ("$MODE" == ui || "$MODE" == all) && ${#SHOTS[@]} -eq 0 ]]; then
       EXPORT="FAIL (UI 테스트가 스크린샷을 남기지 않음)"; STATUS=1
     fi
@@ -172,6 +180,14 @@ if [[ $STATUS -eq 0 ]]; then OVERALL=PASS; else OVERALL=FAIL; fi
         "$(plutil -extract "testFailures.$f.failureText" raw -o - "$RUN/test-summary.json")"
       f=$((f + 1))
     done
+  fi
+  if [[ $STRAY_COUNT -gt 0 ]]; then
+    echo
+    echo "## 자동 첨부 (FAIL)"
+    echo "Xcode가 자동으로 만든 첨부(실패 시 화면 녹화, 자동 스크린샷 등)이거나 이름 규칙(NN-상태-설명)을 따르지 않는 첨부입니다."
+    echo "화면 전체가 담겨 다른 앱의 개인 정보가 들어 있을 수 있습니다. results.xcresult 안에도 같은 내용이 있습니다."
+    echo "열어 보기 전에 project.yml 스킴의 녹화 설정을 확인하고, 이 실행 폴더는 사람의 승인을 받아 통째로 지우세요."
+    printf '%s' "$STRAY"
   fi
   if [[ ${#SHOTS[@]} -gt 0 ]]; then
     echo
