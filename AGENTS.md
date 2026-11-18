@@ -34,6 +34,7 @@
 - 단위 테스트 호스트에서는 앱이 창 없이 실행된다(`AppEntry`, `XCTestConfigurationFilePath`). 이 분기를 지우지 않는다.
 - macOS SwiftUI `Text`의 문자열은 접근성 `value`로 읽는다(`label` 아님). `contains`가 아니라 정확히 일치하는지 비교한다.
 - 스크린샷 이름은 `NN-상태-설명` 형식으로 붙인다 (예: `01-initial-launch`, `03-after-increment`). 이 형식이 아닌 첨부는 `verify.sh`가 자동 첨부로 보고 FAIL 처리한다.
+- 창·팝오버 스크린샷은 `WindowScreenshot.maskedPNG`로 둥근 모서리 바깥을 지워서 첨부한다(`XCUIElement.screenshot()`은 모서리 바깥의 다른 앱 화면까지 찍는다).
 - UI 테스트의 디버그 출력은 창 단위(`app.windows.firstMatch.debugDescription`)로 한다. `app.debugDescription`은 메뉴 막대의 최근 항목과 사용자 이름까지 로그에 남긴다.
 - 검증 스크립트를 수정하면 통제된 실패(테스트 실패, 컴파일 오류 등)를 주입해 FAIL과 0이 아닌 종료 코드를 확인하고, 주입한 변경은 원상 복구한다.
 

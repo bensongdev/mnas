@@ -53,8 +53,17 @@ final class NativeStarterUITests: XCTestCase {
     }
 
     private func capture(_ name: String) {
-        let screenshot = app.windows.firstMatch.screenshot()
-        let attachment = XCTAttachment(screenshot: screenshot)
+        // 창 모서리가 둥글어 바깥에 다른 앱 화면이 비친다. 그 부분을 지워서 첨부한다.
+        let window = app.windows.firstMatch
+        guard let png = WindowScreenshot.maskedPNG(window.screenshot(), pointWidth: window.frame.width) else {
+            XCTFail("스크린샷 모서리를 지우지 못했습니다: \(name)")
+            return
+        }
+        XCTAssertTrue(
+            WindowScreenshot.cornersAreTransparent(png, pointWidth: window.frame.width),
+            "스크린샷 모서리가 지워지지 않았습니다: \(name)"
+        )
+        let attachment = XCTAttachment(data: png, uniformTypeIdentifier: "public.png")
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)
