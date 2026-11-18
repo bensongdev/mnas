@@ -105,6 +105,8 @@ UI 기능을 추가할 때는 `AppUITests/<Name>UITests.swift`에서 화면 이�
   xcrun notarytool store-credentials "mac-native-ai-notary" --apple-id <애플ID> --team-id <팀ID>
   ```
   계정 정보는 키체인에만 저장되고 저장소에는 들어가지 않습니다. 팀 ID는 스크립트가 인증서 이름에서 읽습니다.
+  이 명령은 **macOS 터미널 앱에서 직접** 실행하세요. AI 에이전트 대화창의 셸 실행 기능(예: Claude Code의 `!`)은 숨김 암호 입력을 제대로 전달하지 못해, 올바른 앱 암호도 `401 Invalid credentials`로 실패할 수 있습니다.
+  저장 확인: `xcrun notarytool history --keychain-profile "mac-native-ai-notary"` (기록 조회만 하며 업로드하지 않음)
 
 **실행**
 ```bash
