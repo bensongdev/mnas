@@ -4,6 +4,9 @@ import XCTest
 /// 창 스크린샷의 둥근 모서리 바깥을 투명하게 지운다.
 /// `XCUIElement.screenshot()`은 창의 사각형 영역을 그대로 찍으므로, 둥근 모서리 바깥에
 /// 뒤에 있던 다른 앱의 화면(개인 정보가 있을 수 있음)이 섞인다.
+/// Xcode 16 SDK에서는 `XCUIScreenshot.image`가 메인 액터 전용이라 메인 액터에서 실행한다
+/// (Swift 6 언어 모드에서는 이게 없으면 컴파일 오류).
+@MainActor
 enum WindowScreenshot {
     /// macOS 26 창 모서리 반지름(포인트)보다 넉넉하게 잡는다. 창 테두리가 조금 깎이는 것은 감수한다.
     static let cornerRadius: CGFloat = 28

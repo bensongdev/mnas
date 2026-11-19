@@ -1,15 +1,17 @@
 import XCTest
 
+// XCUIApplication과 스크린샷 API는 메인 액터 전용이다.
+@MainActor
 final class NativeStarterUITests: XCTestCase {
     private var app: XCUIApplication!
 
-    override func setUpWithError() throws {
+    override func setUp() async throws {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launch()
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         app.terminate()
     }
 
