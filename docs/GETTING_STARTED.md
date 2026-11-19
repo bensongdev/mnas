@@ -96,7 +96,7 @@ swiftlint version
 둘 다 버전 숫자가 나오면 준비 끝입니다.
 
 ### 2-6. 프로젝트 폴더 놓을 위치
-이 프로젝트 폴더는 **홈 폴더 바로 아래**(예: `/Users/내이름/mac-native-ai-system`)에 두는 것을 권장합니다.
+이 프로젝트 폴더는 **홈 폴더 바로 아래**(예: `/Users/내이름/mnas`)에 두는 것을 권장합니다.
 iCloud로 동기화되는 `데스크탑`이나 `문서` 폴더에 두면, 빌드할 때 생기는 큰 파일이 계속 동기화되어 느려질 수 있습니다.
 
 ---
@@ -105,7 +105,7 @@ iCloud로 동기화되는 `데스크탑`이나 `문서` 폴더에 두면, 빌드
 
 ### 3-1. 프로젝트 폴더로 이동
 ```bash
-cd ~/mac-native-ai-system
+cd ~/mnas
 ```
 > 폴더 위치가 다르다면 `cd ` (cd와 공백)까지 입력한 뒤, Finder에서 프로젝트 폴더를 터미널 창으로 끌어다 놓고 Enter를 누르세요. 경로가 자동으로 입력됩니다.
 
@@ -115,7 +115,7 @@ cd ~/mac-native-ai-system
 ```
 정상이면 마지막에 이렇게 나옵니다.
 ```
-Created project at /Users/.../mac-native-ai-system/NativeStarter.xcodeproj
+Created project at /Users/.../mnas/NativeStarter.xcodeproj
 
 NativeStarter.xcodeproj 생성 완료. 다음 단계: ./scripts/verify.sh all
 ```
@@ -252,7 +252,7 @@ Claude Code가 아닌 AI 도구에서는 `/spec`, `/implement` 대신 [README 4�
 
 ## 6. 자주 쓰는 명령어
 
-모두 프로젝트 폴더에서 실행합니다. (`cd ~/mac-native-ai-system` 먼저)
+모두 프로젝트 폴더에서 실행합니다. (`cd ~/mnas` 먼저)
 
 | 명령어 | 하는 일 | 걸리는 시간 |
 |---|---|---|

@@ -1,4 +1,6 @@
-# macOS Native AI Development System
+# MNAS
+
+**macOS Native AI System**
 
 **macOS 네이티브 SwiftUI 앱을 위한 AI 구현 → 빌드 → 테스트 → 스크린샷 증거 → 사람 승인 템플릿**
 
@@ -14,7 +16,7 @@
 
 ## 1. 시작
 ```bash
-cd mac-native-ai-system
+cd mnas
 ./scripts/bootstrap.sh
 open NativeStarter.xcodeproj   # 이름을 바꿨다면 <Name>.xcodeproj
 ./scripts/verify.sh all

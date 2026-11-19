@@ -15,7 +15,7 @@ disable-model-invocation: true
 ```bash
 T="$(cd "$(dirname "$(readlink -f ~/.local/bin/new-mac-app)")/.." && pwd)"
 ```
-- `~/.local/bin/new-mac-app`이 없으면 멈추고, mac-native-ai-system README 5절의 설치 방법을 안내한다.
+- `~/.local/bin/new-mac-app`이 없으면 멈추고, MNAS README 5절의 설치 방법을 안내한다.
 - `$T/docs/PRODUCT_SPEC_TEMPLATE.md`(형식)와 `$T/AGENTS.md`(사람 승인이 필요한 항목)를 읽는다.
 
 ## 2. 요구사항이 비어 있거나 한 단어뿐이면
